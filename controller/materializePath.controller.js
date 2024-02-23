@@ -31,46 +31,43 @@ const addingNode = async (req, res) => {
 };
 
 // searching within materialize path tree using grapgh lookup aggregation
-const findingSubTree = async (req, res) => {
+const findPath = async (req, res) => {
   try {
     const startTime = Date.now();
 
     const nodeName = req.params.id;
-    const node = await pathModel.aggregate([
-      {
-        $match: { _id: nodeName },
-      },
-      {
-        $graphLookup: {
-          from: "materializepaths",
-          startWith: "$path",
-          connectFromField: "path",
-          connectToField: "_id",
-          as: "ancestors",
-        },
-      },
-      {
-        $project: {
-          // enabling the index
-          path: 1,
-          ancestors: 1,
-        },
-      },
-    ]);
-    // in how much time it finds the data from the materialize path tree
+    const node = await pathModel.findOne({ _id: nodeName });
+
+    if (!node) {
+      return res.status(404).json({ error: "Node not found" });
+    }
+
+    const path = [node];
+    let currentNode = node;
+
+    // Follow the path until we reach the root
+    while (currentNode.path !== null) {
+      const parent = await pathModel.findOne({ _id: currentNode.path });
+      if (!parent) {
+        // In case the parent node is not found, break to avoid infinite loop
+        break;
+      }
+      path.unshift(parent); // Add parent node to the beginning of the path
+      currentNode = parent;
+    }
+
+    // Calculate execution time
     const endTime = Date.now();
     const executionTime = endTime - startTime;
     console.log(`Execution time: ${executionTime} milliseconds`);
 
-    if (!node || !node.length) {
-      return res.status(404).json({ error: "Node not found" });
-    }
-    res.json({ path: node[0].path, ancestors: node[0].ancestors });
+    res.json({ startNode: nodeName, path });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 const subTreeFromNode = async (req, res) => {
   try {
@@ -125,4 +122,4 @@ const subTreeFromNode = async (req, res) => {
   }
 };
 
-module.exports = { addingNode, findingSubTree, subTreeFromNode };
+module.exports = { addingNode, findPath, subTreeFromNode };
