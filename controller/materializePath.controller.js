@@ -72,5 +72,45 @@ const findingSubTree = async (req, res) => {
   }
 };
 
+const subTreeFromNode = async (req, res) => {
+  try {
+    const { id } = req.params; // Extract the node name from the URL parameter
 
-module.exports = { addingNode, findingSubTree };
+    // Aggregate pipeline to perform graph lookup
+    const pipeline = [
+      {
+        $match: { _id: id } // Match the starting node
+      },
+      {
+        $graphLookup: {
+          from: "materializepaths", // The collection to perform the lookup
+          startWith: "$_id", // Start with the _id of the current node
+          connectFromField: "_id",
+          connectToField: "path",
+          as: "subtree" // Output field containing the subtree
+        }
+      },
+      {
+        $unwind: "$subtree" // Unwind the subtree array
+      }
+    ];
+
+    // Execute the aggregation pipeline
+    const result = await pathModel.aggregate(pipeline).exec();
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ error: "Node not found" });
+    }
+
+    // Extract the subtree nodes
+    const subtreeNodes = result.map(doc => doc.subtree);
+
+    res.status(200).json({ message: "Subtree found", subtree: subtreeNodes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+module.exports = { addingNode, findingSubTree, subTreeFromNode };
