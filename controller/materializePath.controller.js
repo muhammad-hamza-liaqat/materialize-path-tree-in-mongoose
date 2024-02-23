@@ -60,7 +60,7 @@ const findPath = async (req, res) => {
   }
 };
 
-
+// finding subtree from a specific node
 const subTreeFromNode = async (req, res) => {
   try {
     const { id } = req.params;
@@ -93,7 +93,7 @@ const subTreeFromNode = async (req, res) => {
   }
 };
 
-
+// finding the data of a tree
 const findData = async (req,res)=>{
   const data = await pathModel.find({})
   return res.status(200).json({message: "data fetched", data: data})
