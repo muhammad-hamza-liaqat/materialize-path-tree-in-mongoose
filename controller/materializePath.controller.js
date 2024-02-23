@@ -74,36 +74,49 @@ const findingSubTree = async (req, res) => {
 
 const subTreeFromNode = async (req, res) => {
   try {
-    const { id } = req.params; // Extract the node name from the URL parameter
-
-    // Aggregate pipeline to perform graph lookup
+    const { id } = req.params;
     const pipeline = [
       {
-        $match: { _id: id } // Match the starting node
+        $match: { _id: id },
       },
       {
         $graphLookup: {
-          from: "materializepaths", // The collection to perform the lookup
-          startWith: "$_id", // Start with the _id of the current node
+          from: "materializepaths",
+          startWith: "$_id",
           connectFromField: "_id",
           connectToField: "path",
-          as: "subtree" // Output field containing the subtree
-        }
+          as: "subtree",
+          maxDepth: 100,
+        },
       },
       {
-        $unwind: "$subtree" // Unwind the subtree array
-      }
+        $unwind: "$subtree",
+      },
+      {
+        $addFields: {
+          pathArray: { $split: ["$subtree.path", ","] },
+          pathDepth: {
+            $size: { $ifNull: [{ $split: ["$subtree.path", ","] }, []] },
+          },
+        },
+      },
+      {
+        $sort: { pathDepth: 1, pathArray: 1 },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          subtree: { $push: "$subtree" },
+        },
+      },
     ];
 
-    // Execute the aggregation pipeline
     const result = await pathModel.aggregate(pipeline).exec();
 
     if (!result || result.length === 0) {
       return res.status(404).json({ error: "Node not found" });
     }
-
-    // Extract the subtree nodes
-    const subtreeNodes = result.map(doc => doc.subtree);
+    const subtreeNodes = result[0].subtree;
 
     res.status(200).json({ message: "Subtree found", subtree: subtreeNodes });
   } catch (err) {
@@ -111,6 +124,5 @@ const subTreeFromNode = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 module.exports = { addingNode, findingSubTree, subTreeFromNode };
