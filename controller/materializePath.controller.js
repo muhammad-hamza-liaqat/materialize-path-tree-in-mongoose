@@ -76,7 +76,7 @@ const subTreeFromNode = async (req, res) => {
         },
       },
       {
-        $sort: { "subtree._id": 1 }, // Sort the subtree nodes if necessary
+        $sort: { "subtree._id": 1 }, 
       },
     ];
 
