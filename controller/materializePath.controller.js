@@ -66,12 +66,9 @@ const subTreeFromNode = async (req, res) => {
     const { id } = req.params;
     const pipeline = [
       {
-        $match: { _id: id },
-      },
-      {
         $graphLookup: {
           from: "materializepaths",
-          startWith: "$_id",
+          startWith: id,
           connectFromField: "_id",
           connectToField: "path",
           as: "subtree",
@@ -79,24 +76,7 @@ const subTreeFromNode = async (req, res) => {
         },
       },
       {
-        $unwind: "$subtree",
-      },
-      {
-        $addFields: {
-          pathArray: { $split: ["$subtree.path", ","] },
-          pathDepth: {
-            $size: { $ifNull: [{ $split: ["$subtree.path", ","] }, []] },
-          },
-        },
-      },
-      {
-        $sort: { pathDepth: 1, pathArray: 1 },
-      },
-      {
-        $group: {
-          _id: "$_id",
-          subtree: { $push: "$subtree" },
-        },
+        $sort: { "subtree._id": 1 }, // Sort the subtree nodes if necessary
       },
     ];
 
@@ -105,14 +85,14 @@ const subTreeFromNode = async (req, res) => {
     if (!result || result.length === 0) {
       return res.status(404).json({ error: "Node not found" });
     }
-    const subtreeNodes = result[0].subtree;
 
-    res.status(200).json({ message: "Subtree found", subtree: subtreeNodes });
+    res.status(200).json({ message: "Subtree found", subtree: result[0].subtree });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 const findData = async (req,res)=>{
   const data = await pathModel.find({})
