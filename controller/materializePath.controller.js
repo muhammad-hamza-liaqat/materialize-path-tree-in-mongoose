@@ -11,7 +11,7 @@ const addingNode = async (req, res) => {
       newPath = null;
     } else {
       // If parentPath is provided, it's a child node
-      newPath = parentPath + "," + name;
+      newPath = parentPath;
     }
 
     const newCategory = new pathModel({
@@ -20,7 +20,7 @@ const addingNode = async (req, res) => {
     });
 
     await newCategory.save();
-
+    console.log("node added: ", newCategory);
     res
       .status(201)
       .json({ message: "node added successfully", dataAdded: newCategory });
@@ -29,6 +29,7 @@ const addingNode = async (req, res) => {
     res.status(500).json({ error: "Failed to add category" });
   }
 };
+
 // searching within materialize path tree using grapgh lookup aggregation
 const findingSubTree = async (req, res) => {
   try {
