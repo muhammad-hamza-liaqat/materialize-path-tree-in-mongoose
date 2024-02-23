@@ -31,39 +31,45 @@ const addingNode = async (req, res) => {
 };
 // searching within materialize path tree using grapgh lookup aggregation
 const findingSubTree = async (req, res) => {
-    try {
-      const nodeName = req.params.id;
-      const node = await pathModel.aggregate([
-        {
-          $match: { _id: nodeName }
+  try {
+    const startTime = Date.now();
+
+    const nodeName = req.params.id;
+    const node = await pathModel.aggregate([
+      {
+        $match: { _id: nodeName },
+      },
+      {
+        $graphLookup: {
+          from: "materializepaths",
+          startWith: "$path",
+          connectFromField: "path",
+          connectToField: "_id",
+          as: "ancestors",
         },
-        {
-          $graphLookup: {
-            from: 'materializepaths', 
-            startWith: '$path',
-            connectFromField: 'path',
-            connectToField: '_id',
-            as: 'ancestors'
-          }
+      },
+      {
+        $project: {
+          // enabling the index
+          path: 1,
+          ancestors: 1,
         },
-        {
-          $project: {
-            // enabling the index
-            path: 1,
-            ancestors: 1
-          }
-        }
-      ]);
-  
-      if (!node || !node.length) {
-        return res.status(404).json({ error: 'Node not found' });
-      }
-      res.json({ path: node[0].path, ancestors: node[0].ancestors });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
+      },
+    ]);
+    // in how much time it finds the data from the materialize path tree
+    const endTime = Date.now();
+    const executionTime = endTime - startTime;
+    console.log(`Execution time: ${executionTime} milliseconds`);
+
+    if (!node || !node.length) {
+      return res.status(404).json({ error: "Node not found" });
     }
-  };
-  
+    res.json({ path: node[0].path, ancestors: node[0].ancestors });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 
 module.exports = { addingNode, findingSubTree };
