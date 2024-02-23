@@ -34,29 +34,21 @@ const addingNode = async (req, res) => {
 const findPath = async (req, res) => {
   try {
     const startTime = Date.now();
-
     const nodeName = req.params.id;
     const node = await pathModel.findOne({ _id: nodeName });
-
     if (!node) {
       return res.status(404).json({ error: "Node not found" });
     }
-
     const path = [node];
     let currentNode = node;
-
-    // Follow the path until we reach the root
     while (currentNode.path !== null) {
       const parent = await pathModel.findOne({ _id: currentNode.path });
       if (!parent) {
-        // In case the parent node is not found, break to avoid infinite loop
         break;
       }
-      path.unshift(parent); // Add parent node to the beginning of the path
+      path.unshift(parent);
       currentNode = parent;
     }
-
-    // Calculate execution time
     const endTime = Date.now();
     const executionTime = endTime - startTime;
     console.log(`Execution time: ${executionTime} milliseconds`);
