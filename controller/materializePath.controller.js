@@ -114,4 +114,9 @@ const subTreeFromNode = async (req, res) => {
   }
 };
 
-module.exports = { addingNode, findPath, subTreeFromNode };
+const findData = async (req,res)=>{
+  const data = await pathModel.find({})
+  return res.status(200).json({message: "data fetched", data: data})
+}
+
+module.exports = { addingNode, findPath, subTreeFromNode, findData };
