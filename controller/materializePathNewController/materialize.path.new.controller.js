@@ -2,9 +2,9 @@ const MaterializePathModel = require("../../models/materializePath.model");
 
 const newNodeToAdd = async (req, res) => {
     try {
-        const newNodeId = req.body.newNodeId; // Assuming newNodeId is provided in the request body
-        const parentId = req.body.parentId; // Assuming parentId is provided in the request body
-        let newPath = null; // Default path for root node
+        const newNodeId = req.body.newNodeId; 
+        const parentId = req.body.parentId; 
+        let newPath = null; 
 
         const isRootNode = await MaterializePathModel.countDocuments() === 0;
 
@@ -15,6 +15,7 @@ const newNodeToAdd = async (req, res) => {
 
         // If newNodeId is not provided, return an error
         if (!newNodeId) {
+            console.log("new nodeID is required");
             return res.status(400).json({ message: 'New node ID is required' });
         }
 
@@ -22,6 +23,7 @@ const newNodeToAdd = async (req, res) => {
         if (parentId) {
             const parentNode = await MaterializePathModel.findById(parentId);
             if (!parentNode) {
+                console.log("parent not found!")
                 return res.status(404).json({ message: 'Parent node not found' });
             }
             newPath = (parentNode.path || ',') + parentId + ',';
@@ -35,7 +37,7 @@ const newNodeToAdd = async (req, res) => {
 
         // Save the new node
         await newNode.save();
-
+        console.log("node added succesfully", newNode);
         // Respond with success message and the added node
         return res.status(201).json({ message: 'Node added successfully', newNode });
     } catch (error) {

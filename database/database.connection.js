@@ -2,7 +2,7 @@ const mongo = require("mongoose");
 mongo
   .connect(process.env.database_URL_connection_STRING)
   .then(() => {
-    console.log("MongoDB connected to trees!");
+    console.log("MongoDB connected to treesNew!");
   })
   .catch((error) => {
     console.log("MongoDB not connected! error: ", error);
