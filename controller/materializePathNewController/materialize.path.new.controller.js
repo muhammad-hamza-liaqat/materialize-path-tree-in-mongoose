@@ -82,36 +82,26 @@ const findSubTree = async (req, res) => {
         return res.status(400).json({ message: "id is required in the params!" });
     }
     try {
-        // Find the node based on the provided id
         const node = await MaterializePathModel.findOne({ _id: id });
         if (!node) {
             return res.status(404).json({ message: "Node not found" });
         }
-
-        // Split the path to extract all ancestor ids if it's not null
         let ancestorIds = [];
         if (node.path !== null) {
-            ancestorIds = node.path.split(',').filter(item => item !== '').slice(1); // Exclude empty string and root node
+            ancestorIds = node.path.split(',').filter(item => item !== '').slice(1); 
         }
-
-        // Fetch all ancestors based on their ids
         let ancestors = [];
         if (ancestorIds.length > 0) {
             ancestors = await MaterializePathModel.find({ _id: { $in: ancestorIds } });
-
-            // Sort ancestors based on the length of their paths
             ancestors.sort((a, b) => a.path.split(',').length - b.path.split(',').length);
         }
 
-        // If the node is not at the root level, fetch the root node ("books") as an additional ancestor
         if (node.path !== null) {
             const rootNode = await MaterializePathModel.findOne({ path: null });
             if (rootNode) {
-                ancestors.unshift(rootNode); // Add the root node at the beginning of the ancestors array
+                ancestors.unshift(rootNode);
             }
         }
-
-        // Fetch children by finding all nodes whose path contains the id of the current node
         const children = await MaterializePathModel.find({ path: { $regex: `,${id},` } });
 
         const subtree = {
