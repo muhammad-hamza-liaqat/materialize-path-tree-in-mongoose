@@ -76,4 +76,58 @@ const findPath = async (req, res) => {
   }
 };
 
-module.exports = { newNodeToAdd, findPath };
+const findSubTree = async (req, res) => {
+    const id = req.params.id;
+    if (!id) {
+        return res.status(400).json({ message: "id is required in the params!" });
+    }
+    try {
+        // Find the node based on the provided id
+        const node = await MaterializePathModel.findOne({ _id: id });
+        if (!node) {
+            return res.status(404).json({ message: "Node not found" });
+        }
+
+        // Split the path to extract all ancestor ids if it's not null
+        let ancestorIds = [];
+        if (node.path !== null) {
+            ancestorIds = node.path.split(',').filter(item => item !== '').slice(1); // Exclude empty string and root node
+        }
+
+        // Fetch all ancestors based on their ids
+        let ancestors = [];
+        if (ancestorIds.length > 0) {
+            ancestors = await MaterializePathModel.find({ _id: { $in: ancestorIds } });
+
+            // Sort ancestors based on the length of their paths
+            ancestors.sort((a, b) => a.path.split(',').length - b.path.split(',').length);
+        }
+
+        // If the node is not at the root level, fetch the root node ("books") as an additional ancestor
+        if (node.path !== null) {
+            const rootNode = await MaterializePathModel.findOne({ path: null });
+            if (rootNode) {
+                ancestors.unshift(rootNode); // Add the root node at the beginning of the ancestors array
+            }
+        }
+
+        // Fetch children by finding all nodes whose path contains the id of the current node
+        const children = await MaterializePathModel.find({ path: { $regex: `,${id},` } });
+
+        const subtree = {
+            node,
+            ancestors,
+            children
+        };
+
+        console.log("data=>", subtree);
+        return res.status(200).json({ message: "Data fetched", data: subtree });        
+    } catch (error) {
+        console.log("findSubTree error", error);
+        return res.status(500).json({ message: "Internal server error", error: error });
+    }
+};
+
+
+
+module.exports = { newNodeToAdd, findPath, findSubTree };
