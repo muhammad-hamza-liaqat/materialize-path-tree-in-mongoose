@@ -1,0 +1,4 @@
+const newNodeToAdd = async(req,res)=>{
+    // res.end("hello")
+}
+module.exports = {newNodeToAdd}

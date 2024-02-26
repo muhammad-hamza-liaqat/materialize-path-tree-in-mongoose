@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 
-const model = new mongoose.Schema({
-  _id: String,
+const treeNodeSchema = new mongoose.Schema({
+  name: String,
   path: String
 });
-const materializePathModel = mongoose.model('materializePath', model);
 
-console.log("materializePath model sync completed!")
+const MaterializePathModel = mongoose.model('MaterializePath', treeNodeSchema);
 
-module.exports = materializePathModel;
+module.exports = MaterializePathModel;

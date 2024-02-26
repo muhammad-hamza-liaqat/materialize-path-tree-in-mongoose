@@ -3,7 +3,7 @@ const app = express();
 require("dotenv").config();
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const materialRoute = require("./routes/materializepath.route");
+const { newMaterializeRoutes } = require("./routes/newMaterializeRoute");
 
 // middlewares
 app.use(bodyParser.json());
@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 require("./database/database.connection")
 
 // routes 
-app.use("/api", materialRoute);
+app.use("/new", newMaterializeRoutes)
 
 
 app.listen(process.env.PORT, ()=>{
