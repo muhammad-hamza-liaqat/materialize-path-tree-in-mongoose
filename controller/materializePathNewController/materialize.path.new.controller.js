@@ -176,4 +176,4 @@ const findSubTree = async (req, res) => {
 
 
 
-module.exports = { newNodeToAdd, findPath, findSubTree, graphPath };
+module.exports = { newNodeToAdd, findPath, findSubTree };
